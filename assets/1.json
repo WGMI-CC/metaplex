@@ -1,0 +1,41 @@
+{
+    "name": "TEST BLOCKBUDDY 02",
+    "symbol": "",
+    "description": "TEST FOR BLOCKBUDDY ON DEVNET",
+    "seller_fee_basis_points": 1000,
+    "external_url": "https://wgmi.cc",
+    "imagePath": "image.gif",
+    "attributes": [
+        {
+            "trait_type": "Background",
+            "value": "Green"
+        },
+        {
+            "trait_type": "OS",
+            "value": "Phong"
+        },
+        {
+            "trait_type": "OS Color",
+            "value": "B/W"
+        }
+    ],
+    "collection": {
+        "name": "Block Buddies",
+        "family": "WGMI NFT Collector's Club"
+    },
+    "properties": {
+        "category": "image",
+        "files": [
+            {
+                "uri": "image.gif",
+                "type": "image/gif"
+            }
+        ],
+        "creators": [
+            {
+                "address": "6QWgFU4qLdPttMzUziSqFCw5fR7gy1HtjkiFagg24YMG",
+                "share": 100
+            }
+        ]
+    }
+}
