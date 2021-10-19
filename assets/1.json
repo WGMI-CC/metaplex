@@ -1,27 +1,24 @@
 {
-    "name": "TEST BLOCKBUDDY 02",
+    "name": "AUDIO GIF TEST 02 Y",
     "symbol": "",
     "description": "TEST FOR BLOCKBUDDY ON DEVNET",
     "seller_fee_basis_points": 1000,
     "external_url": "https://wgmi.cc",
-    "imagePath": "image.gif",
+    "image": "image.gif",
+    "animation_url": "audio.mp3",
     "attributes": [
         {
-            "trait_type": "Background",
-            "value": "Green"
+            "trait_type": "Letter",
+            "value": "Y"
         },
         {
-            "trait_type": "OS",
-            "value": "Phong"
-        },
-        {
-            "trait_type": "OS Color",
-            "value": "B/W"
+            "trait_type": "Music",
+            "value": "Battle"
         }
     ],
     "collection": {
-        "name": "Block Buddies",
-        "family": "WGMI NFT Collector's Club"
+        "name": "Sample Letters",
+        "family": "Demo Set Collectors"
     },
     "properties": {
         "category": "image",
@@ -29,6 +26,10 @@
             {
                 "uri": "image.gif",
                 "type": "image/gif"
+            },
+            {
+                "uri": "audio.mp3",
+                "type": "audio/mp3"
             }
         ],
         "creators": [

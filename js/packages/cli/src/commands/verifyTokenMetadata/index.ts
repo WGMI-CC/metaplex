@@ -2,7 +2,7 @@ import path from 'path';
 import log from 'loglevel';
 import { validate } from 'jsonschema';
 
-import { EXTENSION_JSON, EXTENSION_PNG } from '../../helpers/constants';
+import { EXTENSION_JSON, EXTENSION_GIF } from '../../helpers/constants';
 import tokenMetadataJsonSchema from './token-metadata.schema.json';
 
 type TokenMetadata = {
@@ -15,7 +15,7 @@ type TokenMetadata = {
 
 export const verifyAssets = ({ files, uploadElementsCount }) => {
   const pngFileCount = files.filter(it => {
-    return it.endsWith(EXTENSION_PNG);
+    return it.endsWith(EXTENSION_GIF);
   }).length;
   const jsonFileCount = files.filter(it => {
     return it.endsWith(EXTENSION_JSON);
@@ -85,7 +85,7 @@ export const verifyCreatorCollation = (
 };
 
 export const verifyImageURL = (image, files, manifestFile) => {
-  const expectedImagePath = `image${EXTENSION_PNG}`;
+  const expectedImagePath = `image${EXTENSION_GIF}`;
   if (image !== expectedImagePath) {
     // We _could_ match against this in the JSON schema validation, but it is totally valid to have arbitrary URLs to images here.
     // The downside, though, is that those images will not get uploaded to Arweave since they're not on-disk.

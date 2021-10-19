@@ -1,4 +1,4 @@
-import { EXTENSION_PNG } from '../helpers/constants';
+import { EXTENSION_GIF, EXTENSION_MP3 } from '../helpers/constants';
 import path from 'path';
 import {
   createConfig,
@@ -10,10 +10,11 @@ import fs from 'fs';
 import BN from 'bn.js';
 import { loadCache, saveCache } from '../helpers/cache';
 import log from 'loglevel';
-import { awsUpload } from '../helpers/upload/aws';
 import { arweaveUpload } from '../helpers/upload/arweave';
-import { ipfsCreds, ipfsUpload } from '../helpers/upload/ipfs';
 import { chunks } from '../helpers/various';
+
+const IMAGE_PLACEHOLDER = "image" + EXTENSION_GIF;
+const AUDIO_PLACEHOLDER = "audio" + EXTENSION_MP3;
 
 export async function upload(
   files: string[],
@@ -24,8 +25,6 @@ export async function upload(
   storage: string,
   retainAuthority: boolean,
   mutable: boolean,
-  ipfsCredentials: ipfsCreds,
-  awsS3Bucket: string,
 ): Promise<boolean> {
   let uploadSuccessful = true;
 
@@ -43,24 +42,46 @@ export async function upload(
     existingInCache = Object.keys(cacheContent.items);
   }
 
-  const seen = {};
-  const newFiles = [];
+  const seenImage = {};
+  const seenAudio = {};
+  const newImageFiles = [];
+  const newAudioFiles = [];
 
   files.forEach(f => {
-    if (!seen[f.replace(EXTENSION_PNG, '').split('/').pop()]) {
-      seen[f.replace(EXTENSION_PNG, '').split('/').pop()] = true;
-      newFiles.push(f);
-    }
-  });
-  existingInCache.forEach(f => {
-    if (!seen[f]) {
-      seen[f] = true;
-      newFiles.push(f + '.png');
+    if (f.endsWith(EXTENSION_GIF)) {
+        if (!seenImage[f.replace(EXTENSION_GIF, '').split('/').pop()]) {
+          seenImage[f.replace(EXTENSION_GIF, '').split('/').pop()] = true;
+          newImageFiles.push(f);
+        }
+    } else if (f.endsWith(EXTENSION_MP3)) {
+        if (!seenAudio[f.replace(EXTENSION_MP3, '').split('/').pop()]) {
+            seenAudio[f.replace(EXTENSION_MP3, '').split('/').pop()] = true;
+            newAudioFiles.push(f);
+          }
     }
   });
 
-  const images = newFiles.filter(val => path.extname(val) === EXTENSION_PNG);
-  const SIZE = images.length;
+  existingInCache.forEach(f => {
+    if (f.endsWith(EXTENSION_GIF)) {
+        if (!seenImage[f]) {
+        seenImage[f] = true;
+        newImageFiles.push(f + EXTENSION_GIF);
+        }
+    } else if (f.endsWith(EXTENSION_MP3)) {
+        if (!seenAudio[f]) {
+            seenAudio[f] = true;
+            newAudioFiles.push(f + EXTENSION_MP3);
+        }
+    }
+  });
+
+  const images = newImageFiles.filter(val => path.extname(val) === EXTENSION_GIF);
+  const IMAGES_SIZE = images.length;
+
+  const audioFiles = newAudioFiles.filter(val => path.extname(val) === EXTENSION_MP3);
+  const AUDIO_SIZE = audioFiles.length;
+
+  if (IMAGES_SIZE !== AUDIO_SIZE) throw new Error('Number of images and audio files must match.');
 
   const walletKeyPair = loadWalletKey(keypair);
   const anchorProgram = await loadCandyProgram(walletKeyPair, env);
@@ -69,24 +90,37 @@ export async function upload(
     ? new PublicKey(cacheContent.program.config)
     : undefined;
 
-  for (let i = 0; i < SIZE; i++) {
+  for (let i = 0; i < IMAGES_SIZE; i++) {
     const image = images[i];
     const imageName = path.basename(image);
-    const index = imageName.replace(EXTENSION_PNG, '');
-
+    const imageIndex = imageName.replace(EXTENSION_GIF, '');
+    
+    const audioName = imageName.replace(EXTENSION_GIF, EXTENSION_MP3);
+    const audio = audioFiles.find(val => path.basename(val).startsWith(imageIndex));
+    if (audio === undefined) throw new Error(`Missing audio file to match ${imageName}`);
+    const audioIndex = imageIndex;
+     
     log.debug(`Processing file: ${i}`);
     if (i % 50 === 0) {
       log.info(`Processing file: ${i}`);
     }
 
-    let link = cacheContent?.items?.[index]?.link;
-    if (!link || !cacheContent.program.uuid) {
-      const manifestPath = image.replace(EXTENSION_PNG, '.json');
+    let contentData = cacheContent?.items?.[imageIndex];
+    let link: string;
+    let files: {file: fs.PathLike, format: string, filename: string}[];
+    if (contentData) {
+        link = contentData.link;
+        files = contentData.files;
+    }
+    if (!link || !files || !cacheContent.program.uuid) {
+      const manifestPath = image.replace(EXTENSION_GIF, '.json');
       const manifestContent = fs
         .readFileSync(manifestPath)
         .toString()
-        .replace(imageName, 'image.gif')
-        .replace(imageName, 'image.gif');
+        .replace(imageName, IMAGE_PLACEHOLDER)
+        .replace(imageName, IMAGE_PLACEHOLDER)
+        .replace(audioName, AUDIO_PLACEHOLDER)
+        .replace(audioName, AUDIO_PLACEHOLDER);
       const manifest = JSON.parse(manifestContent);
 
       const manifestBuffer = Buffer.from(JSON.stringify(manifest));
@@ -128,34 +162,35 @@ export async function upload(
       if (!link) {
         try {
           if (storage === 'arweave') {
+            files = [
+                {file: image, format: 'image/gif', filename: IMAGE_PLACEHOLDER},
+                {file: audio, format: 'audio/mp3', filename: AUDIO_PLACEHOLDER},
+            ]
             link = await arweaveUpload(
-              walletKeyPair,
-              anchorProgram,
-              env,
-              image,
-              manifestBuffer,
-              manifest,
-              index,
+                walletKeyPair,
+                anchorProgram,
+                env,
+                files,
+                manifestBuffer,
+                manifest,
+                imageIndex,
             );
-          } else if (storage === 'ipfs') {
-            link = await ipfsUpload(ipfsCredentials, image, manifestBuffer);
-          } else if (storage === 'aws') {
-            link = await awsUpload(awsS3Bucket, image, manifestBuffer);
           }
 
           if (link) {
-            log.debug('setting cache for ', index);
-            cacheContent.items[index] = {
-              link,
-              name: manifest.name,
-              onChain: false,
+            log.debug('setting cache for ', imageIndex);
+            cacheContent.items[imageIndex] = {
+                link: link,
+                files: files,
+                name: manifest.name,
+                onChain: false,
             };
             cacheContent.authority = walletKeyPair.publicKey.toBase58();
             saveCache(cacheName, env, cacheContent);
           }
         } catch (er) {
           uploadSuccessful = false;
-          log.error(`Error uploading file ${index}`, er);
+          log.error(`Error uploading file ${imageIndex}`, er);
         }
       }
     }
