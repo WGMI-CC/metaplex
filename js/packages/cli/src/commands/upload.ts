@@ -78,8 +78,8 @@ export async function upload(
   const images = newImageFiles.filter(val => path.extname(val) === EXTENSION_GIF);
   const IMAGES_SIZE = images.length;
 
-  const audioFiles = newImageFiles.filter(val => path.extname(val) === EXTENSION_MP3);
-  const AUDIO_SIZE = images.length;
+  const audioFiles = newAudioFiles.filter(val => path.extname(val) === EXTENSION_MP3);
+  const AUDIO_SIZE = audioFiles.length;
 
   if (IMAGES_SIZE !== AUDIO_SIZE) throw new Error('Number of images and audio files must match.');
 
