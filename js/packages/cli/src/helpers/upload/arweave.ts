@@ -24,7 +24,7 @@ export async function arweaveUpload(
   walletKeyPair,
   anchorProgram,
   env,
-  image,
+  files: {file: fs.PathLike, format: string, filename: string}[],
   manifestBuffer,
   manifest,
   index,
@@ -51,10 +51,12 @@ export async function arweaveUpload(
   const data = new FormData();
   data.append('transaction', tx['txid']);
   data.append('env', env);
-  data.append('file[]', fs.createReadStream(image), {
-    filename: `image.gif`,
-    contentType: 'image/gif',
-  });
+  for (let file of files) {
+    data.append('file[]', fs.createReadStream(file.file), {
+        filename: file.filename, 
+        contentType: file.format
+    });
+  }
   data.append('file[]', manifestBuffer, 'metadata.json');
 
   const result = await upload(data, manifest, index);

@@ -19,7 +19,7 @@ import {
   CONFIG_ARRAY_START,
   CONFIG_LINE_SIZE,
   EXTENSION_JSON,
-  EXTENSION_PNG,
+  EXTENSION_GIF,
 } from './helpers/constants';
 import {
   getCandyMachineAddress,
@@ -109,7 +109,7 @@ programCommand('upload')
     };
 
     const pngFileCount = files.filter(it => {
-      return it.endsWith(EXTENSION_PNG);
+      return it.endsWith(EXTENSION_GIF);
     }).length;
     const jsonFileCount = files.filter(it => {
       return it.endsWith(EXTENSION_JSON);
