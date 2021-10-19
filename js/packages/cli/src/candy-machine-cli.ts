@@ -20,6 +20,7 @@ import {
   CONFIG_LINE_SIZE,
   EXTENSION_JSON,
   EXTENSION_GIF,
+  EXTENSION_MP3,
 } from './helpers/constants';
 import {
   getCandyMachineAddress,
@@ -108,25 +109,28 @@ programCommand('upload')
       secretKey: ipfsInfuraSecret,
     };
 
-    const pngFileCount = files.filter(it => {
+    const gifFileCount = files.filter(it => {
       return it.endsWith(EXTENSION_GIF);
     }).length;
+    const mp3FileCount = files.filter(it => {
+        return it.endsWith(EXTENSION_MP3);
+      }).length;
     const jsonFileCount = files.filter(it => {
       return it.endsWith(EXTENSION_JSON);
     }).length;
 
     const parsedNumber = parseInt(number);
-    const elemCount = parsedNumber ? parsedNumber : pngFileCount;
+    const elemCount = parsedNumber ? parsedNumber : gifFileCount;
 
-    if (pngFileCount !== jsonFileCount) {
+    if ((gifFileCount !== jsonFileCount) || (mp3FileCount !== jsonFileCount)) {
       throw new Error(
-        `number of png files (${pngFileCount}) is different than the number of json files (${jsonFileCount})`,
+        `number of gif/mp3 files (${gifFileCount}) is different than the number of json files (${jsonFileCount})`,
       );
     }
 
-    if (elemCount < pngFileCount) {
+    if (elemCount < gifFileCount) {
       throw new Error(
-        `max number (${elemCount})cannot be smaller than the number of elements in the source folder (${pngFileCount})`,
+        `max number (${elemCount})cannot be smaller than the number of elements in the source folder (${gifFileCount})`,
       );
     }
 
@@ -145,8 +149,6 @@ programCommand('upload')
         storage,
         retainAuthority,
         mutable,
-        ipfsCredentials,
-        awsS3Bucket,
       );
 
       if (successful) {
