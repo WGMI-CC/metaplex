@@ -2,3 +2,17 @@
 # yarn lockfile v1
 
 
+"@types/node@^16.11.1":
+  "integrity" "sha512-PYGcJHL9mwl1Ek3PLiYgyEKtwTMmkMw4vbiyz/ps3pfdRYLVv+SN7qHVAImrjdAXxgluDEw6Ph4lyv+m9UpRmA=="
+  "resolved" "https://registry.npmjs.org/@types/node/-/node-16.11.1.tgz"
+  "version" "16.11.1"
+
+"commander@^8.2.0":
+  "integrity" "sha512-LLKxDvHeL91/8MIyTAD5BFMNtoIwztGPMiM/7Bl8rIPmHCZXRxmSWr91h57dpOpnQ6jIUqEWdXE/uBYMfiVZDA=="
+  "resolved" "https://registry.npmjs.org/commander/-/commander-8.2.0.tgz"
+  "version" "8.2.0"
+
+"loglevel@^1.7.1":
+  "integrity" "sha512-Hesni4s5UkWkwCGJMQGAh71PaLUmKFM60dHvq0zi/vDhhrzuk+4GgNbTXJ12YYQJn6ZKBDNIjYcuQGKudvqrIw=="
+  "resolved" "https://registry.npmjs.org/loglevel/-/loglevel-1.7.1.tgz"
+  "version" "1.7.1"

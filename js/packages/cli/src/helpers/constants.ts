@@ -1,4 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
+import { FileSpecs } from '../model/files';
 export const CANDY_MACHINE = 'candy_machine';
 export const MAX_NAME_LENGTH = 32;
 export const MAX_URI_LENGTH = 200;
@@ -42,7 +43,11 @@ export const CACHE_PATH = './.cache';
 
 export const DEFAULT_TIMEOUT = 15000;
 
-export const EXTENSION_PNG = '.png';
-export const EXTENSION_GIF = '.gif';
-export const EXTENSION_MP3 = '.mp3';
-export const EXTENSION_JSON = '.json';
+export const FILE_SPECS: FileSpecs = {
+  gif: { extension: '.gif', placeholder: 'image.gif', format: 'image/gif' },
+  png: { extension: '.png', placeholder: 'image.png', format: 'image/png' },
+  mp3: { extension: '.mp3', placeholder: 'audio.mp3', format: 'audio/mp3' },
+  wav: { extension: '.wav', placeholder: 'audio.wav', format: 'audio/wav' },
+  mp4: { extension: '.mp4', placeholder: 'video.mp4', format: 'video/mp4' },
+  json: { extension: '.json', placeholder: undefined, format: undefined },
+};

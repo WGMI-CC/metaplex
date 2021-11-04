@@ -6,8 +6,9 @@ import fetch from 'node-fetch';
 import { ARWEAVE_PAYMENT_WALLET } from '../constants';
 import { sendTransactionWithRetryWithKeypair } from '../transactions';
 
+//TODO
 async function upload(data: FormData, manifest, index) {
-  log.debug(`trying to upload ${index}.png: ${manifest.name}`);
+  log.debug(`trying to upload ${index}: ${manifest.name}`);
   return await (
     await fetch(
       'https://us-central1-principal-lane-200702.cloudfunctions.net/uploadFile4',
@@ -20,11 +21,17 @@ async function upload(data: FormData, manifest, index) {
   ).json();
 }
 
+export interface ArweaveFilePayload {
+  file: fs.PathLike;
+  format: string;
+  filename: string;
+}
+
 export async function arweaveUpload(
   walletKeyPair,
   anchorProgram,
   env,
-  files: {file: fs.PathLike, format: string, filename: string}[],
+  files: ArweaveFilePayload[],
   manifestBuffer,
   manifest,
   index,
@@ -35,7 +42,7 @@ export async function arweaveUpload(
     anchor.web3.SystemProgram.transfer({
       fromPubkey: walletKeyPair.publicKey,
       toPubkey: ARWEAVE_PAYMENT_WALLET,
-      lamports: storageCost,
+      lamports: storageCost * files.length,
     }),
   ];
 
@@ -51,10 +58,10 @@ export async function arweaveUpload(
   const data = new FormData();
   data.append('transaction', tx['txid']);
   data.append('env', env);
-  for (let file of files) {
+  for (const file of files) {
     data.append('file[]', fs.createReadStream(file.file), {
-        filename: file.filename, 
-        contentType: file.format
+      filename: file.filename,
+      contentType: file.format,
     });
   }
   data.append('file[]', manifestBuffer, 'metadata.json');
