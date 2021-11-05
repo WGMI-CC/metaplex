@@ -352,7 +352,7 @@ class UploadTask {
       : undefined;
 
     for (let i = 0; i < newItems.length; i++) {
-      if (i % 50 === 0) log.info(`Processing file: ${i}`);
+      log.info(`Processing fileset: ${i}`);
 
       const item: UploadItem = newItems[i];
       const itemIndex: string = item.files.index;
@@ -366,7 +366,9 @@ class UploadTask {
       }
       if (!link || !files || !cacheContent.program.uuid) {
         const manifestPath: string = item.files.manifest;
-        const manifestContent: string = fs.readFileSync(manifestPath).toString();
+        const manifestContent: string = fs
+          .readFileSync(manifestPath)
+          .toString();
         for (const mediaSpec of item.files.media) {
           while (manifestContent.includes(mediaSpec.path))
             manifestContent.replace(mediaSpec.path, mediaSpec.spec.placeholder);
