@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "@types/node-fetch": "^3.0.3"
+  }
+}

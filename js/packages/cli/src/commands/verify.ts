@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import log from 'loglevel';
 import { CONFIG_ARRAY_START, CONFIG_LINE_SIZE } from '../helpers/constants';
 import { Config } from '../types';
+import fetch from 'node-fetch';
 
 const COMMAND_SPEC: CommandSpec = {
   name: 'verify_candy_machine',
