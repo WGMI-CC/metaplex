@@ -509,6 +509,7 @@ class UploadTask {
         uuid: res.uuid,
         txId: undefined,
       };
+      cacheContent.program.uuid = res.uuid;
 
       saveCache(this.cacheName, this.env, cacheContent);
       return cacheContent.program.config;
