@@ -61,7 +61,8 @@
     "imagemin": "^7.0.1",
     "imagemin-pngquant": "^9.0.2",
     "lodash": "^4.17.21",
-    "merge-images": "^2.0.0"
+    "merge-images": "^2.0.0",
+    "@metaplex/arweave-cost": "^1.0.4"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.15.6",

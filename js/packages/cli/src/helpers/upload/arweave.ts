@@ -5,26 +5,53 @@ import log from 'loglevel';
 import fetch from 'node-fetch';
 import { ARWEAVE_PAYMENT_WALLET } from '../constants';
 import { sendTransactionWithRetryWithKeypair } from '../transactions';
+import path from 'path';
+import { calculate } from '@metaplex/arweave-cost';
+import { stat } from 'fs/promises';
 
-//TODO
+const ARWEAVE_UPLOAD_ENDPOINT =
+  'https://us-central1-metaplex-studios.cloudfunctions.net/uploadFile';
+
+async function fetchAssetCostToStore(fileSizes: number[]) {
+  const result = await calculate(fileSizes);
+  log.debug('Arweave cost estimates:', result);
+
+  return result.solana * anchor.web3.LAMPORTS_PER_SOL;
+}
+
 async function upload(data: FormData, manifest, index) {
   log.debug(`trying to upload ${index}: ${manifest.name}`);
   return await (
-    await fetch(
-      'https://us-central1-principal-lane-200702.cloudfunctions.net/uploadFile4',
-      {
-        method: 'POST',
-        // @ts-ignore
-        body: data,
-      },
-    )
+    await fetch(ARWEAVE_UPLOAD_ENDPOINT, {
+      method: 'POST',
+      // @ts-ignore
+      body: data,
+    })
   ).json();
 }
 
-export interface ArweaveFilePayload {
-  file: fs.PathLike;
-  format: string;
-  filename: string;
+function estimateManifestSize(filenames: string[]) {
+  const paths = {};
+
+  for (const name of filenames) {
+    paths[name] = {
+      id: 'artestaC_testsEaEmAGFtestEGtestmMGmgMGAV438',
+      ext: path.extname(name).replace('.', ''),
+    };
+  }
+
+  const manifest = {
+    manifest: 'arweave/paths',
+    version: '0.1.0',
+    paths,
+    index: {
+      path: 'metadata.json',
+    },
+  };
+
+  const data = Buffer.from(JSON.stringify(manifest), 'utf8');
+  log.debug('Estimated manifest size:', data.length);
+  return data.length;
 }
 
 export async function arweaveUpload(
@@ -32,17 +59,29 @@ export async function arweaveUpload(
   anchorProgram,
   env,
   files: ArweaveFilePayload[],
-  manifestBuffer,
-  manifest,
+  manifestBuffer, // TODO rename metadataBuffer
+  manifest, // TODO rename metadata
   index,
 ) {
-  const storageCost = 2300000; // 0.0023 SOL per file (paid to arweave)
+  const fileSizes: number[] = (
+    await Promise.all(files.map(f => stat(f.file)))
+  ).map(s => s.size);
+  const fileNamesForManifestEstimation: string[] = files.map(f => f.filename);
+  const estimatedManifestSize = estimateManifestSize(
+    fileNamesForManifestEstimation,
+  );
+  const storageCost = await fetchAssetCostToStore([
+    ...fileSizes,
+    manifestBuffer.length,
+    estimatedManifestSize,
+  ]);
+  console.log(`lamport cost to store ${index}: ${storageCost}`);
 
   const instructions = [
     anchor.web3.SystemProgram.transfer({
       fromPubkey: walletKeyPair.publicKey,
       toPubkey: ARWEAVE_PAYMENT_WALLET,
-      lamports: storageCost * files.length,
+      lamports: storageCost,
     }),
   ];
 
@@ -51,9 +90,9 @@ export async function arweaveUpload(
     walletKeyPair,
     instructions,
     [],
-    'single',
+    'confirmed',
   );
-  log.debug('transaction for arweave payment:', tx);
+  log.debug(`solana transaction (${env}) for arweave payment:`, tx);
 
   const data = new FormData();
   data.append('transaction', tx['txid']);
@@ -79,4 +118,10 @@ export async function arweaveUpload(
     // @todo improve
     throw new Error(`No transaction ID for upload: ${index}`);
   }
+}
+
+export interface ArweaveFilePayload {
+  file: fs.PathLike;
+  format: string;
+  filename: string;
 }
