@@ -37,7 +37,7 @@ async function action(
   const walletKeyPair = loadWalletKey(keypair);
   const anchorProgram = await loadCandyProgram(walletKeyPair, env);
 
-  const configAddress = new PublicKey(cacheContent.program.config);
+  const configAddress = new PublicKey(cacheContent.program.config.config);
   const config = await anchorProgram.provider.connection.getAccountInfo(
     configAddress,
   );
