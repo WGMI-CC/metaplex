@@ -5,7 +5,7 @@ import { mint } from './mint';
 import { PublicKey } from '@solana/web3.js';
 
 const COMMAND_SPEC: CommandSpec = {
-  name: 'update_candy_machine',
+  name: 'mint_one_token',
   arguments: [],
   options: [],
   action: action,
@@ -17,7 +17,7 @@ async function action(
 ): Promise<void> {
   const { keypair, env, cacheName } = cmd.opts();
   const cacheContent = loadCache(cacheName, env);
-  const configAddress = new PublicKey(cacheContent.program.config);
+  const configAddress = new PublicKey(cacheContent.program.config.config);
   const tx = await mint(keypair, env, configAddress);
 
   log.info('mint_one_token finished', tx);
