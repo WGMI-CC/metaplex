@@ -5,23 +5,16 @@ import {
 } from '../helpers/accounts';
 import { CacheSchema, loadCache, saveCache } from '../helpers/cache';
 import { parsePrice } from '../helpers/various';
-import { CommandArgument, CommandOption, CommandSpec } from '../model/command';
+import { CommandOption, CommandSpec } from '../model/command';
 import { Keypair, PublicKey } from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import * as anchor from '@project-serum/anchor';
 import * as fs from 'fs';
-import * as path from 'path';
 import log from 'loglevel';
 
 const COMMAND_SPEC: CommandSpec = {
   name: 'create_candy_machine',
-  arguments: [
-    CommandArgument.of(
-      '<directory>',
-      'Directory containing images named from 0-n',
-      val => fs.readdirSync(`${val}`).map(file => path.join(val, file)),
-    ),
-  ],
+  arguments: [],
   options: [
     CommandOption.of('-n, --number <number>', 'Number of images to upload'),
     CommandOption.of(
