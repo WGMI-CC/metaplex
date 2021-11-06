@@ -114,7 +114,7 @@ async function action(
     wallet = new PublicKey(solTreasuryAccount);
   }
 
-  const config = new PublicKey(cacheContent.program.config);
+  const config = cacheContent.program.config.config;
   const [candyMachine, bump] = await getCandyMachineAddress(
     config,
     cacheContent.program.uuid,
