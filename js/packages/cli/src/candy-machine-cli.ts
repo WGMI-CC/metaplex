@@ -4,6 +4,7 @@ import { COMMAND_SPEC as UPLOAD_SPEC } from './commands/upload';
 import { COMMAND_SPEC as CREATE_CANDY_MACHINE_SPEC } from './commands/createCandyMachine';
 import { COMMAND_SPEC as UPDATE_CANDY_MACHINE_SPEC } from './commands/updateCandyMachine';
 import { COMMAND_SPEC as MINT_ONE_TOKEN_SPEC } from './commands/mintOneToken';
+import { COMMAND_SPEC as VERIFY_CANDY_MACHINE_SPEC } from './commands/verify';
 import { CommandOption, CommandSpec } from './model/command';
 
 const GLOBAL_OPTIONS: CommandOption[] = [
@@ -59,6 +60,7 @@ function setLogLevel(value: string): void {
 
 makeCommand(UPLOAD_SPEC);
 makeCommand(CREATE_CANDY_MACHINE_SPEC);
+makeCommand(VERIFY_CANDY_MACHINE_SPEC);
 makeCommand(UPDATE_CANDY_MACHINE_SPEC);
 makeCommand(MINT_ONE_TOKEN_SPEC);
 program.parse(process.argv);
