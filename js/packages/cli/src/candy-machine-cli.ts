@@ -1,9 +1,10 @@
 import { Command, program } from 'commander';
 import log from 'loglevel';
 import { COMMAND_SPEC as UPLOAD_SPEC } from './commands/upload';
+import { COMMAND_SPEC as CREATE_CANDY_MACHINE_SPEC } from './commands/createCandyMachine';
+import { COMMAND_SPEC as UPDATE_CANDY_MACHINE_SPEC } from './commands/updateCandyMachine';
+import { COMMAND_SPEC as MINT_ONE_TOKEN_SPEC } from './commands/mintOneToken';
 import { CommandOption, CommandSpec } from './model/command';
-
-//TODO re-add the IPFS and AWS upload options for metaplex
 
 const GLOBAL_OPTIONS: CommandOption[] = [
   CommandOption.of('-e, --env <string>', 'Solana cluster env name', 'devnet'),
@@ -57,4 +58,7 @@ function setLogLevel(value: string): void {
 }
 
 makeCommand(UPLOAD_SPEC);
+makeCommand(CREATE_CANDY_MACHINE_SPEC);
+makeCommand(UPDATE_CANDY_MACHINE_SPEC);
+makeCommand(MINT_ONE_TOKEN_SPEC);
 program.parse(process.argv);

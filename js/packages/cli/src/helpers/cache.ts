@@ -35,6 +35,8 @@ export function loadCache(
       },
       items: cacheJson.items,
       authority: cacheJson.authority,
+      candyMachineAddress: cacheJson.candyMachineAddress,
+      startDate: cacheJson.startDate,
     };
   }
   return result;
@@ -59,8 +61,13 @@ export function saveCache(
     authority: cacheContent.authority,
     env: env,
     cacheName: cacheName,
+    candyMachineAddress: cacheContent.candyMachineAddress,
+    startDate: cacheContent.startDate,
   };
-  fs.writeFileSync(cachePath(env, cacheName, cPath), JSON.stringify(cacheJson));
+  fs.writeFileSync(
+    cachePath(env, cacheName, cPath),
+    JSON.stringify(cacheJson, null, 2),
+  );
 }
 
 interface CacheJson {
@@ -76,10 +83,14 @@ interface CacheJson {
   authority: string;
   env: any;
   cacheName: string;
+  candyMachineAddress: string;
+  startDate: number;
 }
 
 export interface CacheSchema {
   program: { config: ProgramConfig; uuid: string };
   items: { [itemIdnex: string]: UploadItem };
   authority: string;
+  candyMachineAddress: string;
+  startDate: number;
 }

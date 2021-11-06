@@ -330,6 +330,8 @@ class UploadTask {
       program: { config: undefined, uuid: undefined },
       items: {},
       authority: undefined,
+      candyMachineAddress: undefined,
+      startDate: undefined,
     };
     const existingInCache: string[] = Object.keys(cacheContent.items);
 
