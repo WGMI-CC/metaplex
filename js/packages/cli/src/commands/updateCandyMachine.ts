@@ -2,21 +2,14 @@ import log from 'loglevel';
 import { loadWalletKey, loadCandyProgram } from '../helpers/accounts';
 import { loadCache, saveCache } from '../helpers/cache';
 import { parseDate, parsePrice } from '../helpers/various';
-import { CommandArgument, CommandOption, CommandSpec } from '../model/command';
+import { CommandOption, CommandSpec } from '../model/command';
 import * as anchor from '@project-serum/anchor';
 import * as fs from 'fs';
-import * as path from 'path';
 import { PublicKey } from '@solana/web3.js';
 
 const COMMAND_SPEC: CommandSpec = {
   name: 'update_candy_machine',
-  arguments: [
-    CommandArgument.of(
-      '<directory>',
-      'Directory containing images named from 0-n',
-      val => fs.readdirSync(`${val}`).map(file => path.join(val, file)),
-    ),
-  ],
+  arguments: [],
   options: [
     CommandOption.of(
       '-d, --date <string>',
