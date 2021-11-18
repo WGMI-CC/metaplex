@@ -2,8 +2,8 @@ import path from 'path';
 import log from 'loglevel';
 import { validate } from 'jsonschema';
 
-import { EXTENSION_JSON, EXTENSION_GIF } from '../../helpers/constants';
 import tokenMetadataJsonSchema from './token-metadata.schema.json';
+import { FILE_SPECS } from '../../helpers/constants';
 
 type TokenMetadata = {
   image: string;
@@ -15,10 +15,10 @@ type TokenMetadata = {
 
 export const verifyAssets = ({ files, uploadElementsCount }) => {
   const pngFileCount = files.filter(it => {
-    return it.endsWith(EXTENSION_GIF);
+    return it.endsWith(FILE_SPECS.gif.extension);
   }).length;
   const jsonFileCount = files.filter(it => {
-    return it.endsWith(EXTENSION_JSON);
+    return it.endsWith(FILE_SPECS.json.extension);
   }).length;
 
   const parsedNumber = parseInt(uploadElementsCount, 10);
@@ -85,7 +85,7 @@ export const verifyCreatorCollation = (
 };
 
 export const verifyImageURL = (image, files, manifestFile) => {
-  const expectedImagePath = `image${EXTENSION_GIF}`;
+  const expectedImagePath = `image${FILE_SPECS.gif.extension}`;
   if (image !== expectedImagePath) {
     // We _could_ match against this in the JSON schema validation, but it is totally valid to have arbitrary URLs to images here.
     // The downside, though, is that those images will not get uploaded to Arweave since they're not on-disk.
@@ -118,7 +118,7 @@ export const verifyConsistentShares = (collatedCreators: CollatedCreators) => {
 
 export const verifyMetadataManifests = ({ files }) => {
   const manifestFiles = files.filter(
-    file => path.extname(file) === EXTENSION_JSON,
+    file => path.extname(file) === FILE_SPECS.json.extension,
   );
 
   // Used to keep track of the share allocations for individual creators

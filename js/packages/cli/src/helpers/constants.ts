@@ -1,11 +1,12 @@
 import { PublicKey } from '@solana/web3.js';
+import { FileSpecs } from '../model/files';
 export const CANDY_MACHINE = 'candy_machine';
 export const MAX_NAME_LENGTH = 32;
 export const MAX_URI_LENGTH = 200;
 export const MAX_SYMBOL_LENGTH = 10;
 export const MAX_CREATOR_LEN = 32 + 1 + 1;
 export const ARWEAVE_PAYMENT_WALLET = new PublicKey(
-  'HvwC9QSAzvGXhhVrgPmauVwFWcYZhne3hVot9EbHuFTm',
+  '6FKvsq4ydWFci6nGq9ckbjYMtnmaqAoatz5c9XWjiDuS',
 );
 export const CANDY_MACHINE_PROGRAM_ID = new PublicKey(
   'cndyAnrLdpjq1Ssp1z8xxDsB8dxe7u4HL5Nxi2K5WXZ',
@@ -42,7 +43,11 @@ export const CACHE_PATH = './.cache';
 
 export const DEFAULT_TIMEOUT = 15000;
 
-export const EXTENSION_PNG = '.png';
-export const EXTENSION_GIF = '.gif';
-export const EXTENSION_MP3 = '.mp3';
-export const EXTENSION_JSON = '.json';
+export const FILE_SPECS: FileSpecs = {
+  gif: { extension: '.gif', placeholder: 'image.gif', format: 'image/gif' },
+  png: { extension: '.png', placeholder: 'image.png', format: 'image/png' },
+  mp3: { extension: '.mp3', placeholder: 'audio.mp3', format: 'audio/mp3' },
+  wav: { extension: '.wav', placeholder: 'audio.wav', format: 'audio/wav' },
+  mp4: { extension: '.mp4', placeholder: 'video.mp4', format: 'video/mp4' },
+  json: { extension: '.json', placeholder: undefined, format: undefined },
+};

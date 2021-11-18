@@ -13,24 +13,30 @@ import BN from 'bn.js';
 import { createConfigAccount } from './instructions';
 import { web3 } from '@project-serum/anchor';
 import log from 'loglevel';
+import { Creator } from '../types';
 
+export interface CreateConfigInput {
+  maxNumberOfLines: BN;
+  symbol: string;
+  sellerFeeBasisPoints: number;
+  isMutable: boolean;
+  maxSupply: BN;
+  retainAuthority: boolean;
+  creators: Creator[];
+}
+
+export interface ProgramConfig {
+  config: PublicKey;
+  uuid: string;
+  txId: string;
+}
+
+//TODO
 export const createConfig = async function (
   anchorProgram: anchor.Program,
   payerWallet: Keypair,
-  configData: {
-    maxNumberOfLines: BN;
-    symbol: string;
-    sellerFeeBasisPoints: number;
-    isMutable: boolean;
-    maxSupply: BN;
-    retainAuthority: boolean;
-    creators: {
-      address: PublicKey;
-      verified: boolean;
-      share: number;
-    }[];
-  },
-) {
+  configData: CreateConfigInput,
+): Promise<ProgramConfig> {
   const configAccount = Keypair.generate();
   const uuid = uuidFromConfigPubkey(configAccount.publicKey);
 
@@ -255,7 +261,7 @@ export const getEditionMarkPda = async (
   )[0];
 };
 
-export function loadWalletKey(keypair): Keypair {
+export function loadWalletKey(keypair: fs.PathLike): Keypair {
   if (!keypair || keypair == '') {
     throw new Error('Keypair is required!');
   }
