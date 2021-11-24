@@ -7,6 +7,8 @@ import { COMMAND_SPEC as MINT_ONE_TOKEN_SPEC } from './commands/mintOneToken';
 import { COMMAND_SPEC as VERIFY_CANDY_MACHINE_SPEC } from './commands/verify';
 import { CommandOption, CommandSpec } from './model/command';
 
+log.setLevel('info');
+
 const GLOBAL_OPTIONS: CommandOption[] = [
   CommandOption.of('-e, --env <string>', 'Solana cluster env name', 'devnet'),
   CommandOption.of(
