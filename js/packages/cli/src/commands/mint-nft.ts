@@ -8,6 +8,7 @@ import {
   getTokenWallet,
   getMetadata,
   getMasterEdition,
+  loadWalletKey,
 } from '../helpers/accounts';
 import * as anchor from '@project-serum/anchor';
 import {
@@ -30,6 +31,46 @@ import {
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import log from 'loglevel';
+import { CommandOption, CommandSpec } from '../model/command';
+import { web3 } from '@project-serum/anchor';
+import { CacheSchema, loadCache } from './upload-nft';
+
+const COMMAND_SPEC_SINGLE: CommandSpec = {
+  name: 'mint',
+  arguments: [],
+  options: [
+    CommandOption.of(
+      '-m, --metadata <string>',
+      'file of JSON array of metadata URLs',
+    ),
+  ],
+  action: mintAction,
+};
+
+async function mintAction(_, cmd) {
+  const { keypair, env, metadata } = cmd.opts();
+  const solConnection = new web3.Connection(web3.clusterApiUrl(env));
+  const walletKeyPair = loadWalletKey(keypair);
+  await mintNFT(solConnection, walletKeyPair, metadata);
+}
+
+const COMMAND_SPEC_MULTI: CommandSpec = {
+  name: 'mint-cache',
+  arguments: [],
+  options: [],
+  action: mintMultiAction,
+};
+
+async function mintMultiAction(_, cmd) {
+  const { keypair, env, cacheName } = cmd.opts();
+  const solConnection = new web3.Connection(web3.clusterApiUrl(env));
+  const walletKeyPair = loadWalletKey(keypair);
+  const cache: CacheSchema = loadCache(cacheName, env);
+  for (const index of Object.keys(cache.items)) {
+    log.info(`Minting ${index}`);
+    await mintNFT(solConnection, walletKeyPair, cache.items[index].link);
+  }
+}
 
 export const mintNFT = async (
   connection: Connection,
@@ -122,7 +163,7 @@ export const mintNFT = async (
       new Creator({
         address: creator.address,
         share: creator.share,
-        verified: 1,
+        verified: 0,
       }),
   );
   const data = new Data({
@@ -201,3 +242,5 @@ export const mintNFT = async (
   log.info('NFT created', res.txid);
   return { metadataAccount };
 };
+
+export { COMMAND_SPEC_SINGLE, COMMAND_SPEC_MULTI };

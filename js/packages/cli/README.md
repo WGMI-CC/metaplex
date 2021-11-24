@@ -1,3 +1,16 @@
+# Minting NFTs without a Candy Machine
+
+1. Generate art and json like you are creating a candy machine
+2. Run the code to upload media (and metadata) to arweave
+```
+ts-node .\js\packages\cli\src\cli-nft.ts upload ./assets -k "D:/Downloads/test/config/devnet-test.json" -e devnet -l info
+```
+
+3. Run the code to mint the NFT on chain (note you MUST have a complete cache with items that have arweave URLs for metadata)
+```
+ts-node .\js\packages\cli\src\cli-nft.ts mint-cache  -k "D:/Downloads/test/config/devnet-test.json" -e devnet
+```
+
 # CANDY MACHINE
 
 https://user-images.githubusercontent.com/81876372/133098938-dc2c91a6-1280-4ee1-bf0e-db0ccc972ff7.mp4

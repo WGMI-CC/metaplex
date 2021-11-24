@@ -8,6 +8,7 @@ import { sendTransactionWithRetryWithKeypair } from '../transactions';
 import path from 'path';
 import { calculate } from '@metaplex/arweave-cost';
 import { stat } from 'fs/promises';
+import { Manifest } from '../../commands/upload';
 
 const ARWEAVE_UPLOAD_ENDPOINT =
   'https://us-central1-metaplex-studios.cloudfunctions.net/uploadFile';
@@ -55,13 +56,12 @@ function estimateManifestSize(filenames: string[]) {
 }
 
 export async function arweaveUpload(
-  walletKeyPair,
-  anchorProgram,
-  env,
+  walletKeyPair: anchor.web3.Keypair,
+  connection: anchor.web3.Connection,
+  env: string,
   files: ArweaveFilePayload[],
-  manifestBuffer, // TODO rename metadataBuffer
-  manifest, // TODO rename metadata
-  index,
+  manifest: Manifest,
+  index?: string,
 ) {
   const fileSizes: number[] = (
     await Promise.all(files.map(f => stat(f.file)))
@@ -70,6 +70,7 @@ export async function arweaveUpload(
   const estimatedManifestSize = estimateManifestSize(
     fileNamesForManifestEstimation,
   );
+  const manifestBuffer: Buffer = Buffer.from(JSON.stringify(manifest));
   const storageCost = await fetchAssetCostToStore([
     ...fileSizes,
     manifestBuffer.length,
@@ -86,7 +87,7 @@ export async function arweaveUpload(
   ];
 
   const tx = await sendTransactionWithRetryWithKeypair(
-    anchorProgram.provider.connection,
+    connection,
     walletKeyPair,
     instructions,
     [],
@@ -105,7 +106,10 @@ export async function arweaveUpload(
   }
   data.append('file[]', manifestBuffer, 'metadata.json');
 
-  const result = await upload(data, manifest, index);
+  const result: { messages: { filename: string; transactionId: string }[] } =
+    (await upload(data, manifest, index)) as {
+      messages: { filename: string; transactionId: string }[];
+    };
 
   const metadataFile = result.messages?.find(
     m => m.filename === 'manifest.json',

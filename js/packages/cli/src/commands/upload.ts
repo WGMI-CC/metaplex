@@ -76,7 +76,7 @@ interface MediaSpec {
   spec: FileSpec;
 }
 
-interface FileSet {
+export interface FileSet {
   index: string;
   manifest: string;
   media: MediaSpec[];
@@ -139,7 +139,6 @@ async function uploadAction(
       env,
       keypair,
       nftCount,
-      storage,
       retainAuthority,
       mutable,
     ).upload();
@@ -163,7 +162,7 @@ async function uploadAction(
 }
 
 // splits files by their index and by metadata vs media files
-function organizeFiles(files: string[]): FileSet[] {
+export function organizeFiles(files: string[]): FileSet[] {
   const split: SplitArrayResult<string> = splitArrayByPredicate(files, f =>
     f.endsWith(FILE_SPECS.json.extension),
   );
@@ -226,7 +225,7 @@ function splitArrayByPredicate<T>(
 }
 
 // checks that the files referenced in the metadata template are present in the media file list
-async function validateFileSet(fileSet: FileSet): Promise<void> {
+export async function validateFileSet(fileSet: FileSet): Promise<void> {
   const { manifest: metadata, media } = fileSet;
   fs.readFile(
     metadata,
@@ -257,7 +256,7 @@ export interface UploadItem {
   onChain?: boolean;
 }
 
-interface Manifest {
+export interface Manifest {
   name: string;
   properties: {
     creators: Creator[];
@@ -272,7 +271,6 @@ class UploadTask {
   private env: string;
   private walletKeyPair: Keypair;
   private totalNFTs: number;
-  private storage: StorageType;
   private retainAuthority: boolean;
   private mutable: boolean;
 
@@ -284,7 +282,6 @@ class UploadTask {
     env: string,
     walletKeyPair: Keypair,
     totalNFTs: number,
-    storage: StorageType,
     retainAuthority: boolean,
     mutable: boolean,
   ) {
@@ -293,7 +290,6 @@ class UploadTask {
     this.env = env;
     this.walletKeyPair = walletKeyPair;
     this.totalNFTs = totalNFTs;
-    this.storage = storage;
     this.retainAuthority = retainAuthority;
     this.mutable = mutable;
   }
@@ -304,7 +300,6 @@ class UploadTask {
     env: string,
     keypairFile: fs.PathLike,
     totalNFTs: number,
-    storage: StorageType,
     retainAuthority: boolean,
     mutable: boolean,
   ): UploadTask {
@@ -315,7 +310,6 @@ class UploadTask {
       env,
       walletKeyPair,
       totalNFTs,
-      storage,
       retainAuthority,
       mutable,
     );
@@ -335,10 +329,10 @@ class UploadTask {
     };
     const existingInCache: string[] = Object.keys(cacheContent.items);
 
-    // to be honest I dont really understand what this accomplishes <3 Austin Milt
-    const newItems: UploadItem[] = this.findItemsThatNeedProcessing(
+    const newItems: UploadItem[] = findItemsThatNeedProcessing(
+      this.files,
       existingInCache,
-      cacheContent,
+      cacheContent.items,
     );
     const anchorProgram: anchor.Program = await loadCandyProgram(
       this.walletKeyPair,
@@ -377,7 +371,6 @@ class UploadTask {
         }
 
         const manifest: Manifest = JSON.parse(manifestContent) as Manifest;
-        const manifestBuffer = Buffer.from(JSON.stringify(manifest));
 
         // if we havent already done so, create the program config for the candy machine
         if (i === 0) {
@@ -407,12 +400,15 @@ class UploadTask {
         // if we havent already done so, upload media files and get the storage address/info
         if (!link) {
           try {
-            link = await this.uploadMediaFiles(
+            link = await uploadMediaFiles(
+              this.walletKeyPair,
+              this.env,
               item,
-              manifestBuffer,
               manifest,
               itemIndex,
-              anchorProgram,
+              anchorProgram.provider.connection,
+              this.cacheName,
+              saveCache,
               cacheContent,
               files,
             );
@@ -456,28 +452,6 @@ class UploadTask {
     return this.success;
   }
 
-  private findItemsThatNeedProcessing(
-    existingInCache: string[],
-    cacheContent: CacheSchema,
-  ): UploadItem[] {
-    const seenItems: string[] = [];
-    const newItems: UploadItem[] = [];
-    for (const fileSet of this.files) {
-      if (!seenItems[fileSet.index]) {
-        seenItems[fileSet.index] = true;
-        newItems.push({ files: fileSet });
-      }
-    }
-
-    for (const itemIndex of existingInCache) {
-      if (!seenItems[itemIndex]) {
-        seenItems[itemIndex] = true;
-        newItems.push(cacheContent[itemIndex]);
-      }
-    }
-    return newItems;
-  }
-
   private async initializeProgramConfig(
     manifest: Manifest,
     cacheContent: CacheSchema,
@@ -516,52 +490,6 @@ class UploadTask {
     } catch (error) {
       log.error('Error deploying config to Solana network.', error);
       throw error;
-    }
-  }
-
-  private async uploadMediaFiles(
-    item: UploadItem,
-    manifestBuffer: Buffer,
-    manifest: Manifest,
-    itemIndex: string,
-    anchorProgram: anchor.Program,
-    cacheContent: CacheSchema,
-    files: FileSet,
-  ): Promise<string> {
-    try {
-      let link: string;
-      if (this.storage === 'arweave') {
-        const arweaveFiles: ArweaveFilePayload[] = item.files.media.map(f => ({
-          file: f.path,
-          format: f.spec.format,
-          filename: f.spec.placeholder,
-        }));
-        link = await arweaveUpload(
-          this.walletKeyPair,
-          anchorProgram,
-          this.env,
-          arweaveFiles,
-          manifestBuffer,
-          manifest,
-          itemIndex,
-        );
-      }
-
-      if (link) {
-        log.debug('setting cache for ', itemIndex);
-        cacheContent.items[itemIndex] = {
-          link: link,
-          files: files,
-          name: manifest.name,
-          onChain: false,
-        };
-        cacheContent.authority = this.walletKeyPair.publicKey.toBase58();
-        saveCache(this.cacheName, this.env, cacheContent);
-      }
-
-      return link;
-    } catch (error) {
-      throw new UploadError(`Error uploading file ${itemIndex}`, error);
     }
   }
 
@@ -637,7 +565,77 @@ class UploadTask {
   }
 }
 
-class UploadError extends Error {
+export function findItemsThatNeedProcessing(
+  files: FileSet[],
+  existingInCache: string[],
+  cacheContent: { [itemIndex: string]: UploadItem },
+): UploadItem[] {
+  const seenItems: boolean[] = [];
+  const newItems: UploadItem[] = [];
+  for (const fileSet of files) {
+    if (!seenItems[fileSet.index]) {
+      seenItems[fileSet.index] = true;
+      newItems.push({ files: fileSet });
+    }
+  }
+
+  for (const itemIndex of existingInCache) {
+    if (!seenItems[itemIndex]) {
+      seenItems[itemIndex] = true;
+      newItems.push(cacheContent[itemIndex]);
+    }
+  }
+  return newItems;
+}
+
+export async function uploadMediaFiles<
+  C extends { items: { [index: string]: UploadItem }; authority: string },
+>(
+  walletKeyPair: Keypair,
+  env: string,
+  item: UploadItem,
+  manifest: Manifest,
+  itemIndex: string,
+  connection: anchor.web3.Connection,
+  cacheName: string,
+  saveCacheFn: (name: string, env: string, content: C) => void,
+  cacheContent: C,
+  files: FileSet,
+): Promise<string> {
+  try {
+    const arweaveFiles: ArweaveFilePayload[] = item.files.media.map(f => ({
+      file: f.path,
+      format: f.spec.format,
+      filename: f.spec.placeholder,
+    }));
+    const link: string = await arweaveUpload(
+      walletKeyPair,
+      connection,
+      env,
+      arweaveFiles,
+      manifest,
+      itemIndex,
+    );
+
+    if (link) {
+      log.debug('setting cache for ', itemIndex);
+      cacheContent.items[itemIndex] = {
+        link: link,
+        files: files,
+        name: manifest.name,
+        onChain: false,
+      };
+      cacheContent.authority = walletKeyPair.publicKey.toBase58();
+      saveCacheFn(cacheName, env, cacheContent);
+    }
+
+    return link;
+  } catch (error) {
+    throw new UploadError(`Error uploading file ${itemIndex}`, error);
+  }
+}
+
+export class UploadError extends Error {
   public readonly cause: Error;
   constructor(msg: string, cause: Error) {
     super(msg);

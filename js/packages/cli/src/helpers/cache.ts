@@ -79,7 +79,7 @@ interface CacheJson {
     };
     uuid: string;
   };
-  items: { [itemIdnex: string]: UploadItem };
+  items: { [itemIndex: string]: UploadItem };
   authority: string;
   env: any;
   cacheName: string;
@@ -89,7 +89,7 @@ interface CacheJson {
 
 export interface CacheSchema {
   program: { config: ProgramConfig; uuid: string };
-  items: { [itemIdnex: string]: UploadItem };
+  items: { [itemIndex: string]: UploadItem };
   authority: string;
   candyMachineAddress: string;
   startDate: number;
